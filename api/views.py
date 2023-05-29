@@ -88,18 +88,25 @@ def new_medicine():
   quantity_per_dose = data.get('quantity')
   num_of_days = data.get('num_of_days')
   frequency = data.get('num_of_days')
+  days_taken = 0
+  days_left = num_of_days
   
   new_medicine = Medicine(name=name, user_id=user_id,
-                          quantity=quantity_per_dose, num_of_days=num_of_days, frequency=frequency)
+                          quantity=quantity_per_dose,
+                          num_of_days=num_of_days,
+                          frequency=frequency,
+                          days_left= days_left, days_taken=days_taken)
   new_medicine.save()
   new_medicine_details = {"name": name,
                           "user_id": user_id,
                           "quantity_per_dose": quantity_per_dose,
                           "num_of_days": num_of_days,
-                          "frequency": frequency}
+                          "frequency": frequency,
+                          "days_taken": days_taken,
+                          "days_left": days_left}
   return jsonify(new_medicine_details)
 
-@dosetracker_views.route('/all_medicines_by_user/<id>', methods=['GET', 'POST'])
+@dosetracker_views.route('/all_medicines_by_user/<id>', methods=['GET', 'POST'], strict_slashes=False)
 def get_all_medicines_by_user(id):
     user_id = int(id)
     medicines = Medicine.query.filter_by(user_id=user_id).all()
@@ -116,3 +123,30 @@ def get_all_medicines_by_user(id):
       
       medicines_list.append(medicine_obj)
     return jsonify({"medicines_for_user": medicines_list})
+  
+@dosetracker_views.route('/update_medication_status', methods=['POST'], strict_slashes=False)
+def update_medication_status():
+  data = request.get_json()
+  user_id = data.get('user_id')
+  medicine = data.get('name')
+  day_completed = data.get('day_completed')
+  
+  if day_completed == True:
+    medicine_to_be_updated = Medicine.query.filter_by(
+      user_id=user_id).filter_by(name=medicine).first()
+    days_left = medicine_to_be_updated.days_left
+    days_taken = medicine_to_be_updated.days_taken
+    
+    # update days taken and days left
+    new_days_left = days_left - 1
+    new_days_taken = days_taken + 1
+    medicine_to_be_updated.days_left = new_days_left
+    medicine_to_be_updated.days_taken = new_days_taken
+    Medicine.save(medicine_to_be_updated)
+    
+    """to implement mailing, we will have to stop sending mails for that drug at some point.
+    so if days_left is 1 as at when this endpoint is called, stop mailing because after the operations here days_left will be 0
+    though the days left can be checked in the database by the mailing system i guess"""
+    return jsonify({"days_left": new_days_left, "days_taken": new_days_taken})
+    
+    
