@@ -1,0 +1,9 @@
+# this requirement file assumes you have mysql set up already
+Flask==2.2.2
+Flask-Cors==3.0.10
+Flask-HTTPAuth==4.7.0
+Flask-Login==0.6.2
+Flask-SQLAlchemy==3.0.3
+Flask-WTF==1.1.1
+Flask-Mail==0.9.1
+Celery==5.2.7
