@@ -128,7 +128,7 @@ def new_medicine():
                           "days_taken": days_taken,
                           "days_left": days_left,
                           "medicine_id": new_medicine.id}
-  # schedule a job to send the email every 9 hours
+  # schedule a job to send email reminders every 9 hours
   scheduler.add_job(send_email, 'interval', hours=9, kwargs={'user_id':user_id, 'medicine_id': new_medicine.id})
   return jsonify(new_medicine_details)
 
