@@ -9,6 +9,8 @@ import sys
 # attempted relative import with no known parent package error
 sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 from flask_login import UserMixin, LoginManager
+from apscheduler.schedulers.background import BackgroundScheduler
+from apscheduler.jobstores.sqlalchemy import SQLAlchemyJobStore
 
 app = Flask(__name__)
 app.config['SQLALCHEMY_DATABASE_URI'] = 'mysql://root:root@localhost/medicinedosetracker'
@@ -21,7 +23,9 @@ app.config['MAIL_USE_TLS'] = False
 app.config['MAIL_USE_SSL'] = True
 app.config['MAIL_USERNAME'] = 'emelieobumse100@gmail.com'
 app.config['MAIL_PASSWORD'] = 'lgrqiqgiadypprga'
-app.config['MAIL_DEFAULT_SENDER'] = 'emelieobumse100@gmail.com'
+app.config['MAIL_DEFAULT_SENDER'] = ('MDT', 'emelieobumse100@gmail.com')
+"""By providing a tuple with the desired name and the email address,
+the MAIL_DEFAULT_SENDER configuration will be set accordingly. """
 
 # wrap flask mail and flask sqlalchemy around the flask app.
 mail = Mail(app)
@@ -30,6 +34,11 @@ db = SQLAlchemy(app)
 login_manager = LoginManager()
 login_manager.init_app(app)
 login_manager.login_view = 'login'
+
+# aps scheduler
+jobstore = {'default': SQLAlchemyJobStore(url=app.config['SQLALCHEMY_DATABASE_URI'])}
+# enables persistency of jobs in case of shut down
+scheduler = BackgroundScheduler(jobstores=jobstore, daemon=True)
 
 # used to reload object from user id stored in the session
 @login_manager.user_loader
@@ -71,3 +80,7 @@ class User(db.Model, UserMixin):
 
 from views import dosetracker_views
 app.register_blueprint(dosetracker_views)
+
+
+# Start the scheduler
+scheduler.start()

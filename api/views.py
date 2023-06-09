@@ -1,7 +1,7 @@
 #!/usr/bin/python3
 """api views"""
 from flask import jsonify, render_template, redirect, url_for, request
-from api import User, Medicine, app, mail
+from api import User, Medicine, app, mail, scheduler
 from bcrypt import hashpw, checkpw, gensalt
 from flask_mail import Message
 from flask_login import login_user, login_required, logout_user, current_user
@@ -18,18 +18,15 @@ def _hash_password(password):
   return hashed_pw
 
 # sends email using flask mail
-"""def send_email(user_id, medicine_id):
-    with app.app_context():
+def send_email(user_id, medicine_id):
+   with app.app_context():
         medicine = Medicine.query.filter_by(user_id=user_id).filter_by(id=medicine_id).first()
         user = User.query.filter_by(id=user_id).first()
-        msg = Message("Hello", recipients=[user.email])
-        msg.body = f"Dear {user.username}, \nPlease remember to take your medicine, {medicine.name}, you have {medicine.days_left} left. \nLove, MDT team."
-        mail.send(msg)"""
-def send_email():
-    with app.app_context():
-        msg = Message("Hello", recipients=["emelieobumse123@gmail.com"])
-        msg.body = "testing"
-        mail.send(msg)
+        if medicine.days_left > 0:
+          msg = Message(subject="Remdinder to take your meds!", recipients=[user.email])
+          msg.body = f"Dear {user.username}, \nPlease remember to take your medicine, {medicine.name}, the quantity is {medicine.quantity} as usual. You have {medicine.days_left} day(s) left. \nLove, MDT team."
+          print (msg.body)
+          mail.send(msg)
 
 # routes that handle authentication
 
@@ -131,8 +128,8 @@ def new_medicine():
                           "days_taken": days_taken,
                           "days_left": days_left,
                           "medicine_id": new_medicine.id}
-  # get user associated with medicine
-  send_email()
+  # schedule a job to send the email every 9 hours
+  scheduler.add_job(send_email, 'interval', hours=9, kwargs={'user_id':user_id, 'medicine_id': new_medicine.id})
   return jsonify(new_medicine_details)
 
 @dosetracker_views.route('/all_medicines_by_user/<id>', methods=['GET', 'POST'], strict_slashes=False)
