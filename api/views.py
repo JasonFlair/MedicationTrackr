@@ -1,52 +1,73 @@
 #!/usr/bin/python3
 """api views"""
-from forms import RegistrationForm, LoginForm
 from flask import jsonify, render_template, redirect, url_for, request
-from api import User, Medicine, login_manager, db
+from api import User, Medicine, app, mail, scheduler
 from bcrypt import hashpw, checkpw, gensalt
+from flask_mail import Message
 from flask_login import login_user, login_required, logout_user, current_user
+from sqlalchemy.exc import IntegrityError
+import re
 
 from flask import Blueprint
 dosetracker_views = Blueprint('dosetracker_views', __name__)
 
+# hashes password
 def _hash_password(password):
   encoded_password = password.encode('utf-8')
   hashed_pw = hashpw(encoded_password, gensalt())
   return hashed_pw
 
+# sends email using flask mail
+def send_email(user_id, medicine_id):
+   with app.app_context():
+        medicine = Medicine.query.filter_by(user_id=user_id).filter_by(id=medicine_id).first()
+        user = User.query.filter_by(id=user_id).first()
+        if medicine.days_left > 0:
+          msg = Message(subject="Remdinder to take your meds!", recipients=[user.email])
+          msg.body = f"Dear {user.username}, \nPlease remember to take your medicine, {medicine.name}, the quantity is {medicine.quantity} as usual. You have {medicine.days_left} day(s) left. \nLove, MDT team."
+          print (msg.body)
+          mail.send(msg)
+
 # routes that handle authentication
 
-@dosetracker_views.route('/login', methods=['GET', 'POST'])
+@dosetracker_views.route('/login', methods=['POST'])
 def login():
-  form = LoginForm()
-  if form.validate_on_submit():
-      print('valid login')
-      user = User.query.filter_by(email=form.email.data).first()
-      print(user)
-      if user:
-        password = form.password.data
-        print(password)
+    """login endpoint"""
+    data = request.get_json()
+    email = data.get('email')
+    password = data.get('password')
+    user = User.query.filter_by(email=email).first()
+    if not user:
+        return jsonify({"error": "no email sent"})
+    if not password:
+        return jsonify({"error": "no password sent"})
+    print(user)
+    if user:
+        password = password
         encoded_password = password.encode('utf-8')
         if checkpw(encoded_password, user.password.encode('utf-8')):
             login_user(user)
-            return redirect(url_for('dosetracker_views.dashboard'))
-  return render_template('login.html', form=form)
+            return f'success, user: {user.username} logged in'
+            # return redirect(url_for('dosetracker_views.dashboard'))
 
-@dosetracker_views.route('/register', methods=['GET', 'POST'])
+@dosetracker_views.route('/register', methods=['POST'])
 def register():
-  form = RegistrationForm()
-  
-  if form.validate_on_submit():
-    print('yay!!!')
-    hashed_pw = _hash_password(form.password.data)
-    new_user = User(email=form.email.data,
-                    username=form.username.data, 
-                    password=hashed_pw)
-    new_user.save()
-    return redirect(url_for('dosetracker_views.login'))
-  
-    
-  return render_template('register.html', form=form)
+    try:
+        email_pattern = r'^[\w\.-]+@[\w\.-]+\.\w+$'
+        data = request.get_json()
+        email = data.get('email')
+        password = data.get('password')
+        username = data.get('username')
+        hashed_pw = _hash_password(password)
+        # check if email is a valid email with regex
+        if re.match(email_pattern, email) is not None:  # a match was found, email is valid.
+            new_user = User(email=email,
+                        username=username, 
+                        password=hashed_pw)
+            new_user.save()
+            return 'Success! signup completed'
+    except IntegrityError:
+        return jsonify({"error": "attempting to register already existing user"})
 
 @dosetracker_views.route('/logout', methods=['GET', 'POST'])
 @login_required
@@ -69,7 +90,7 @@ def current_user():
 def home():
   return 'Hello'
 
-@dosetracker_views.route('/dashboard', methods=['GET', 'POST'],
+@dosetracker_views.route('/dashboard', methods=['GET'],
                          strict_slashes=False)
 @login_required
 def dashboard():
@@ -84,26 +105,31 @@ def new_medicine():
   """adds new medicine"""
   data = request.get_json()
   user_id = data.get('user_id')
-  name = data.get('name')
+  medicine_name = data.get('medicine_name')
   quantity_per_dose = data.get('quantity')
   num_of_days = data.get('num_of_days')
   frequency = data.get('num_of_days')
   days_taken = 0
   days_left = num_of_days
   
-  new_medicine = Medicine(name=name, user_id=user_id,
+  
+  new_medicine = Medicine(name=medicine_name, user_id=user_id,
                           quantity=quantity_per_dose,
                           num_of_days=num_of_days,
                           frequency=frequency,
                           days_left= days_left, days_taken=days_taken)
   new_medicine.save()
-  new_medicine_details = {"name": name,
+
+  new_medicine_details = {"medicine_name": medicine_name,
                           "user_id": user_id,
                           "quantity_per_dose": quantity_per_dose,
                           "num_of_days": num_of_days,
                           "frequency": frequency,
                           "days_taken": days_taken,
-                          "days_left": days_left}
+                          "days_left": days_left,
+                          "medicine_id": new_medicine.id}
+  # schedule a job to send the email every 9 hours
+  scheduler.add_job(send_email, 'interval', hours=9, kwargs={'user_id':user_id, 'medicine_id': new_medicine.id})
   return jsonify(new_medicine_details)
 
 @dosetracker_views.route('/all_medicines_by_user/<id>', methods=['GET', 'POST'], strict_slashes=False)
