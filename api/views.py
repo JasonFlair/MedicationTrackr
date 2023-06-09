@@ -169,10 +169,6 @@ def update_medication_status():
     medicine_to_be_updated.days_left = new_days_left
     medicine_to_be_updated.days_taken = new_days_taken
     Medicine.save(medicine_to_be_updated)
-    
-    """to implement mailing, we will have to stop sending mails for that drug at some point.
-    so if days_left is 1 as at when this endpoint is called, stop mailing because after the operations here days_left will be 0
-    though the days left can be checked in the database by the mailing system i guess"""
     return jsonify({"days_left": new_days_left, "days_taken": new_days_taken})
     
     
