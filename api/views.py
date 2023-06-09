@@ -5,6 +5,8 @@ from flask import jsonify, render_template, redirect, url_for, request
 from api import User, Medicine, login_manager, db
 from bcrypt import hashpw, checkpw, gensalt
 from flask_login import login_user, login_required, logout_user, current_user
+from sqlalchemy.exc import IntegrityError
+import re
 
 from flask import Blueprint
 dosetracker_views = Blueprint('dosetracker_views', __name__)
@@ -16,37 +18,44 @@ def _hash_password(password):
 
 # routes that handle authentication
 
-@dosetracker_views.route('/login', methods=['GET', 'POST'])
+@dosetracker_views.route('/login', methods=['POST'])
 def login():
-  form = LoginForm()
-  if form.validate_on_submit():
-      print('valid login')
-      user = User.query.filter_by(email=form.email.data).first()
-      print(user)
-      if user:
-        password = form.password.data
-        print(password)
+    """login endpoint"""
+    data = request.get_json()
+    email = data.get('email')
+    password = data.get('password')
+    user = User.query.filter_by(email=email).first()
+    if not user:
+        return jsonify({"error": "no email sent"})
+    if not password:
+        return jsonify({"error": "no password sent"})
+    print(user)
+    if user:
+        password = password
         encoded_password = password.encode('utf-8')
         if checkpw(encoded_password, user.password.encode('utf-8')):
             login_user(user)
-            return redirect(url_for('dosetracker_views.dashboard'))
-  return render_template('login.html', form=form)
+            return f'success, user: {user.username} logged in'
+            # return redirect(url_for('dosetracker_views.dashboard'))
 
-@dosetracker_views.route('/register', methods=['GET', 'POST'])
+@dosetracker_views.route('/register', methods=['POST'])
 def register():
-  form = RegistrationForm()
-  
-  if form.validate_on_submit():
-    print('yay!!!')
-    hashed_pw = _hash_password(form.password.data)
-    new_user = User(email=form.email.data,
-                    username=form.username.data, 
-                    password=hashed_pw)
-    new_user.save()
-    return redirect(url_for('dosetracker_views.login'))
-  
-    
-  return render_template('register.html', form=form)
+    try:
+        email_pattern = r'^[\w\.-]+@[\w\.-]+\.\w+$'
+        data = request.get_json()
+        email = data.get('email')
+        password = data.get('password')
+        username = data.get('username')
+        hashed_pw = _hash_password(password)
+        # check if email is a valid email with regex
+        if re.match(email_pattern, email) is not None:  # a match was found, email is valid.
+            new_user = User(email=email,
+                        username=username, 
+                        password=hashed_pw)
+            new_user.save()
+            return 'Success! signup completed'
+    except IntegrityError:
+        return jsonify({"error": "attempting to register already existing user"})
 
 @dosetracker_views.route('/logout', methods=['GET', 'POST'])
 @login_required
@@ -69,7 +78,7 @@ def current_user():
 def home():
   return 'Hello'
 
-@dosetracker_views.route('/dashboard', methods=['GET', 'POST'],
+@dosetracker_views.route('/dashboard', methods=['GET'],
                          strict_slashes=False)
 @login_required
 def dashboard():
