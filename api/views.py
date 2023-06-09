@@ -1,9 +1,9 @@
 #!/usr/bin/python3
 """api views"""
-from forms import RegistrationForm, LoginForm
 from flask import jsonify, render_template, redirect, url_for, request
-from api import User, Medicine, login_manager, db
+from api import User, Medicine, app, mail
 from bcrypt import hashpw, checkpw, gensalt
+from flask_mail import Message
 from flask_login import login_user, login_required, logout_user, current_user
 from sqlalchemy.exc import IntegrityError
 import re
@@ -11,10 +11,25 @@ import re
 from flask import Blueprint
 dosetracker_views = Blueprint('dosetracker_views', __name__)
 
+# hashes password
 def _hash_password(password):
   encoded_password = password.encode('utf-8')
   hashed_pw = hashpw(encoded_password, gensalt())
   return hashed_pw
+
+# sends email using flask mail
+"""def send_email(user_id, medicine_id):
+    with app.app_context():
+        medicine = Medicine.query.filter_by(user_id=user_id).filter_by(id=medicine_id).first()
+        user = User.query.filter_by(id=user_id).first()
+        msg = Message("Hello", recipients=[user.email])
+        msg.body = f"Dear {user.username}, \nPlease remember to take your medicine, {medicine.name}, you have {medicine.days_left} left. \nLove, MDT team."
+        mail.send(msg)"""
+def send_email():
+    with app.app_context():
+        msg = Message("Hello", recipients=["emelieobumse123@gmail.com"])
+        msg.body = "testing"
+        mail.send(msg)
 
 # routes that handle authentication
 
@@ -93,26 +108,31 @@ def new_medicine():
   """adds new medicine"""
   data = request.get_json()
   user_id = data.get('user_id')
-  name = data.get('name')
+  medicine_name = data.get('medicine_name')
   quantity_per_dose = data.get('quantity')
   num_of_days = data.get('num_of_days')
   frequency = data.get('num_of_days')
   days_taken = 0
   days_left = num_of_days
   
-  new_medicine = Medicine(name=name, user_id=user_id,
+  
+  new_medicine = Medicine(name=medicine_name, user_id=user_id,
                           quantity=quantity_per_dose,
                           num_of_days=num_of_days,
                           frequency=frequency,
                           days_left= days_left, days_taken=days_taken)
   new_medicine.save()
-  new_medicine_details = {"name": name,
+
+  new_medicine_details = {"medicine_name": medicine_name,
                           "user_id": user_id,
                           "quantity_per_dose": quantity_per_dose,
                           "num_of_days": num_of_days,
                           "frequency": frequency,
                           "days_taken": days_taken,
-                          "days_left": days_left}
+                          "days_left": days_left,
+                          "medicine_id": new_medicine.id}
+  # get user associated with medicine
+  send_email()
   return jsonify(new_medicine_details)
 
 @dosetracker_views.route('/all_medicines_by_user/<id>', methods=['GET', 'POST'], strict_slashes=False)

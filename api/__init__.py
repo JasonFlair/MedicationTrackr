@@ -1,6 +1,7 @@
 #!/usr/bin/python3
 """Flask app"""
 from flask import Flask
+from flask_mail import Mail
 from flask_sqlalchemy import SQLAlchemy
 import os
 import sys
@@ -8,12 +9,22 @@ import sys
 # attempted relative import with no known parent package error
 sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 from flask_login import UserMixin, LoginManager
-from bcrypt import hashpw, checkpw, gensalt
 
 app = Flask(__name__)
 app.config['SQLALCHEMY_DATABASE_URI'] = 'mysql://root:root@localhost/medicinedosetracker'
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 app.secret_key = 'notsosecretkey'
+# mail configurations
+app.config['MAIL_SERVER'] = 'smtp.gmail.com'
+app.config['MAIL_PORT'] = 465
+app.config['MAIL_USE_TLS'] = False
+app.config['MAIL_USE_SSL'] = True
+app.config['MAIL_USERNAME'] = 'emelieobumse100@gmail.com'
+app.config['MAIL_PASSWORD'] = 'lgrqiqgiadypprga'
+app.config['MAIL_DEFAULT_SENDER'] = 'emelieobumse100@gmail.com'
+
+# wrap flask mail and flask sqlalchemy around the flask app.
+mail = Mail(app)
 db = SQLAlchemy(app)
 
 login_manager = LoginManager()
