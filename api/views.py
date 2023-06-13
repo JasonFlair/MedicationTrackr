@@ -1,6 +1,6 @@
 #!/usr/bin/python3
 """api views"""
-from flask import jsonify, render_template, redirect, url_for, request
+from flask import jsonify, render_template, redirect, url_for, request, abort, make_response
 from api import User, Medicine, app, mail, scheduler
 from bcrypt import hashpw, checkpw, gensalt
 from flask_mail import Message
@@ -24,7 +24,7 @@ def send_email(user_id, medicine_id):
         user = User.query.filter_by(id=user_id).first()
         if medicine.days_left > 0:
           msg = Message(subject="Remdinder to take your meds!", recipients=[user.email])
-          msg.body = f"Dear {user.username}, \nPlease remember to take your medicine, {medicine.name}, the quantity is {medicine.quantity} as usual. You have {medicine.days_left} day(s) left. \nLove, MDT team."
+          msg.body = f"Dear {user.username}, \n\nPlease remember to take your medicine, {medicine.name}, the quantity is {medicine.quantity} as usual. You have {medicine.days_left} day(s) left. \n\nLove, MedTrackr team."
           print (msg.body)
           mail.send(msg)
 
@@ -37,7 +37,7 @@ def login():
     email = data.get('email')
     password = data.get('password')
     user = User.query.filter_by(email=email).first()
-    if not user:
+    if not email:
         return jsonify({"error": "no email sent"})
     if not password:
         return jsonify({"error": "no password sent"})
@@ -47,8 +47,15 @@ def login():
         encoded_password = password.encode('utf-8')
         if checkpw(encoded_password, user.password.encode('utf-8')):
             login_user(user)
-            return f'success, user: {user.username} logged in'
-            # return redirect(url_for('dosetracker_views.dashboard'))
+            return jsonify({"username": f"{user.username}", "email": f"{user.email}", "id": user.id})
+        else:
+          error_json = jsonify(error="Unauthorised, wrong password")
+          response = make_response(error_json, 401)
+          abort(response)
+    else:
+      error_json = jsonify(error="Unauthorised, no user found")
+      response = make_response(error_json, 401)
+      abort(response)
 
 @dosetracker_views.route('/register', methods=['POST'])
 def register():
@@ -58,6 +65,12 @@ def register():
         email = data.get('email')
         password = data.get('password')
         username = data.get('username')
+        if not email:
+          return jsonify({"error": "no email sent"})
+        if not password:
+          return jsonify({"error": "no password sent"})
+        if not username:
+          return jsonify({"error": "no password sent"})
         hashed_pw = _hash_password(password)
         # check if email is a valid email with regex
         if re.match(email_pattern, email) is not None:  # a match was found, email is valid.
@@ -65,7 +78,7 @@ def register():
                         username=username, 
                         password=hashed_pw)
             new_user.save()
-            return 'Success! signup completed'
+            return jsonify({"username": f"{new_user.username}", "email": f"{new_user.email}", "id": new_user.id})
     except IntegrityError:
         return jsonify({"error": "attempting to register already existing user"})
 
@@ -129,7 +142,7 @@ def new_medicine():
                           "days_left": days_left,
                           "medicine_id": new_medicine.id}
   # schedule a job to send email reminders every 9 hours
-  scheduler.add_job(send_email, 'interval', hours=9, kwargs={'user_id':user_id, 'medicine_id': new_medicine.id})
+  scheduler.add_job(send_email, 'interval', minutes=2, kwargs={'user_id':user_id, 'medicine_id': new_medicine.id})
   return jsonify(new_medicine_details)
 
 @dosetracker_views.route('/all_medicines_by_user/<id>', methods=['GET', 'POST'], strict_slashes=False)

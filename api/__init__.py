@@ -24,7 +24,7 @@ app.config['MAIL_USE_TLS'] = False
 app.config['MAIL_USE_SSL'] = True
 app.config['MAIL_USERNAME'] = 'emelieobumse100@gmail.com'
 app.config['MAIL_PASSWORD'] = getenv('MAIL_PASSWORD')
-app.config['MAIL_DEFAULT_SENDER'] = ('MDT', 'emelieobumse100@gmail.com')
+app.config['MAIL_DEFAULT_SENDER'] = ('MedTrackr', 'emelieobumse100@gmail.com')
 """By providing a tuple with the desired name and the email address,
 the MAIL_DEFAULT_SENDER configuration will be set accordingly. """
 
