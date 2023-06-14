@@ -1,6 +1,6 @@
 #!/usr/bin/python3
 """api views"""
-from flask import jsonify, render_template, redirect, url_for, request, abort, make_response, session
+from flask import jsonify, render_template, redirect, url_for, request, abort, make_response
 from api import User, Medicine, app, mail, scheduler
 from bcrypt import hashpw, checkpw, gensalt
 from flask_mail import Message
@@ -24,7 +24,7 @@ def send_email(user_id, medicine_id):
         user = User.query.filter_by(id=user_id).first()
         if medicine.days_left > 0:
           msg = Message(subject="Remdinder to take your meds!", recipients=[user.email])
-          msg.body = f"Dear {user.username}, \n\nPlease remember to take your medicine, {medicine.name}, the quantity is {medicine.quantity} as usual. You have {medicine.days_left} day(s) left. \n\nLove, MedTrackr team."
+          msg.body = f"Dear {user.username}, \n\nPlease remember to take your medicine, {medicine.name}, the quantity per dose is {medicine.quantity} as usual. You have {medicine.days_left} day(s) left. \n\nLove, MedTrackr team."
           print (msg.body)
           mail.send(msg)
 
