@@ -23,9 +23,9 @@ app.config['MAIL_SERVER'] = 'smtp.gmail.com'
 app.config['MAIL_PORT'] = 465
 app.config['MAIL_USE_TLS'] = False
 app.config['MAIL_USE_SSL'] = True
-app.config['MAIL_USERNAME'] = 'emelieobumse100@gmail.com'
+app.config['MAIL_USERNAME'] = 'medicationtrackrteam@gmail.com'
 app.config['MAIL_PASSWORD'] = getenv('MAIL_PASSWORD')
-app.config['MAIL_DEFAULT_SENDER'] = ('MedTrackr', 'emelieobumse100@gmail.com')
+app.config['MAIL_DEFAULT_SENDER'] = ('MedicationTrackr', 'medicationtrackrteam@gmail.com')
 """By providing a tuple with the desired name and the email address,
 the MAIL_DEFAULT_SENDER configuration will be set accordingly. """
 cors = CORS(app, resources={r"/*": {"origins": "*"}})
@@ -91,3 +91,4 @@ app.register_blueprint(dosetracker_views)
 
 # Start the scheduler
 scheduler.start()
+scheduler.remove_all_jobs()
