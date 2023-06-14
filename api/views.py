@@ -1,6 +1,6 @@
 #!/usr/bin/python3
 """api views"""
-from flask import jsonify, render_template, redirect, url_for, request
+from flask import jsonify, render_template, redirect, url_for, request, abort, make_response
 from api import User, Medicine, app, mail, scheduler
 from bcrypt import hashpw, checkpw, gensalt
 from flask_mail import Message
@@ -13,9 +13,9 @@ dosetracker_views = Blueprint('dosetracker_views', __name__)
 
 # hashes password
 def _hash_password(password):
-  encoded_password = password.encode('utf-8')
-  hashed_pw = hashpw(encoded_password, gensalt())
-  return hashed_pw
+    encoded_password = password.encode('utf-8')
+    hashed_pw = hashpw(encoded_password, gensalt())
+    return hashed_pw
 
 # sends email using flask mail
 def send_email(user_id, medicine_id):
@@ -24,7 +24,7 @@ def send_email(user_id, medicine_id):
         user = User.query.filter_by(id=user_id).first()
         if medicine.days_left > 0:
           msg = Message(subject="Remdinder to take your meds!", recipients=[user.email])
-          msg.body = f"Dear {user.username}, \nPlease remember to take your medicine, {medicine.name}, the quantity is {medicine.quantity} as usual. You have {medicine.days_left} day(s) left. \nLove, MDT team."
+          msg.body = f"Dear {user.username}, \n\nPlease remember to take your medicine, {medicine.name}, the quantity per dose is {medicine.quantity} as usual. You have {medicine.days_left} day(s) left. \n\nLove, MedicationTrackr team."
           print (msg.body)
           mail.send(msg)
 
@@ -37,7 +37,7 @@ def login():
     email = data.get('email')
     password = data.get('password')
     user = User.query.filter_by(email=email).first()
-    if not user:
+    if not email:
         return jsonify({"error": "no email sent"})
     if not password:
         return jsonify({"error": "no password sent"})
@@ -47,8 +47,15 @@ def login():
         encoded_password = password.encode('utf-8')
         if checkpw(encoded_password, user.password.encode('utf-8')):
             login_user(user)
-            return f'success, user: {user.username} logged in'
-            # return redirect(url_for('dosetracker_views.dashboard'))
+            return jsonify({"username": f"{user.username}", "email": f"{user.email}", "id": user.id, "session_cookie details": "can be found in the verbose response"})
+        else:
+          error_json = jsonify(error="Unauthorised, wrong password")
+          response = make_response(error_json, 401)
+          abort(response)
+    else:
+      error_json = jsonify(error="Unauthorised, no user found")
+      response = make_response(error_json, 401)
+      abort(response)
 
 @dosetracker_views.route('/register', methods=['POST'])
 def register():
@@ -58,6 +65,12 @@ def register():
         email = data.get('email')
         password = data.get('password')
         username = data.get('username')
+        if not email:
+          return jsonify({"error": "no email sent"})
+        if not password:
+          return jsonify({"error": "no password sent"})
+        if not username:
+          return jsonify({"error": "no password sent"})
         hashed_pw = _hash_password(password)
         # check if email is a valid email with regex
         if re.match(email_pattern, email) is not None:  # a match was found, email is valid.
@@ -65,15 +78,15 @@ def register():
                         username=username, 
                         password=hashed_pw)
             new_user.save()
-            return 'Success! signup completed'
+            return jsonify({"username": f"{new_user.username}", "email": f"{new_user.email}", "id": new_user.id})
     except IntegrityError:
         return jsonify({"error": "attempting to register already existing user"})
 
 @dosetracker_views.route('/logout', methods=['GET', 'POST'])
 @login_required
 def logout():
-    logout_user()
-    return redirect(url_for('login'))
+    #logout_user()
+    return f'user logged out {current_user.id}.'
   
 
 # routes that handle other operations
@@ -101,6 +114,7 @@ def dashboard():
  
 # routes for medicines operations 
 @dosetracker_views.route('/new_medicine', methods=['GET', 'POST'])
+@login_required
 def new_medicine():
   """adds new medicine"""
   data = request.get_json()
@@ -129,10 +143,11 @@ def new_medicine():
                           "days_left": days_left,
                           "medicine_id": new_medicine.id}
   # schedule a job to send email reminders every 9 hours
-  scheduler.add_job(send_email, 'interval', hours=9, kwargs={'user_id':user_id, 'medicine_id': new_medicine.id})
+  scheduler.add_job(send_email, 'interval', minutes=2, kwargs={'user_id':user_id, 'medicine_id': new_medicine.id})
   return jsonify(new_medicine_details)
 
 @dosetracker_views.route('/all_medicines_by_user/<id>', methods=['GET', 'POST'], strict_slashes=False)
+@login_required
 def get_all_medicines_by_user(id):
     user_id = int(id)
     medicines = Medicine.query.filter_by(user_id=user_id).all()
@@ -146,11 +161,13 @@ def get_all_medicines_by_user(id):
       medicine_obj['frequency'] = medicine.frequency
       medicine_obj['days_taken'] = medicine.days_taken
       medicine_obj['days_left'] = medicine.days_left
+      medicine_obj['id'] = medicine.id
       
       medicines_list.append(medicine_obj)
-    return jsonify({"medicines_for_user": medicines_list})
+    return jsonify({f"medicines_for_user_{user_id}": medicines_list})
   
 @dosetracker_views.route('/update_medication_status', methods=['POST'], strict_slashes=False)
+@login_required
 def update_medication_status():
   data = request.get_json()
   user_id = data.get('user_id')
@@ -158,17 +175,33 @@ def update_medication_status():
   day_completed = data.get('day_completed')
   
   if day_completed == True:
-    medicine_to_be_updated = Medicine.query.filter_by(
-      user_id=user_id).filter_by(name=medicine).first()
-    days_left = medicine_to_be_updated.days_left
-    days_taken = medicine_to_be_updated.days_taken
+    try:
+        medicine_to_be_updated = Medicine.query.filter_by(
+            user_id=user_id).filter_by(name=medicine).first()
+        days_left = medicine_to_be_updated.days_left
+        days_taken = medicine_to_be_updated.days_taken
+        
+        # update days taken and days left
+        new_days_left = days_left - 1
+        new_days_taken = days_taken + 1
+        medicine_to_be_updated.days_left = new_days_left
+        medicine_to_be_updated.days_taken = new_days_taken
+        Medicine.save(medicine_to_be_updated)
+        return jsonify({"days_left": new_days_left, "days_taken": new_days_taken})
+    except Exception:
+        return jsonify({"error": "no medicine found, please check your payload details"})
     
-    # update days taken and days left
-    new_days_left = days_left - 1
-    new_days_taken = days_taken + 1
-    medicine_to_be_updated.days_left = new_days_left
-    medicine_to_be_updated.days_taken = new_days_taken
-    Medicine.save(medicine_to_be_updated)
-    return jsonify({"days_left": new_days_left, "days_taken": new_days_taken})
-    
-    
+@dosetracker_views.route('/delete_medicine', methods=['POST'], strict_slashes=False)
+@login_required
+def delete_medicine():
+    """deletes medicine specified"""
+    data = request.get_json()
+    user_id = data.get('user_id')
+    medicine_id = data.get('medicine_id')
+    try:
+        medicine_to_be_deleted = Medicine.query.filter_by(
+      user_id=user_id).filter_by(id=medicine_id).first()
+        Medicine.delete(medicine_to_be_deleted)
+        return jsonify({"status": "medicine deleted successfully"})
+    except Exception:
+        return jsonify({"error": f"no medicine with medicine_id and user_id found"})
