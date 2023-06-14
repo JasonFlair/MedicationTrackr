@@ -91,4 +91,3 @@ app.register_blueprint(dosetracker_views)
 
 # Start the scheduler
 scheduler.start()
-scheduler.remove_all_jobs()
