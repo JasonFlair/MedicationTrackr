@@ -3,6 +3,7 @@
 from flask import Flask
 from flask_mail import Mail
 from flask_sqlalchemy import SQLAlchemy
+from flask_cors import CORS
 import os
 import sys
 # set parent directory to avoid 
@@ -27,6 +28,7 @@ app.config['MAIL_PASSWORD'] = getenv('MAIL_PASSWORD')
 app.config['MAIL_DEFAULT_SENDER'] = ('MedTrackr', 'emelieobumse100@gmail.com')
 """By providing a tuple with the desired name and the email address,
 the MAIL_DEFAULT_SENDER configuration will be set accordingly. """
+cors = CORS(app, resources={r"/*": {"origins": "*"}})
 
 # wrap flask mail and flask sqlalchemy around the flask app.
 mail = Mail(app)
@@ -63,7 +65,11 @@ class Medicine(db.Model):
       """saves and commits to database"""
       self._db.session.add(self)
       self._db.session.commit()
-
+      
+  def delete(self):
+    """deletes an objects and commits to database"""
+    self._db.session.delete(self)
+    self._db.session.commit()
 class User(db.Model, UserMixin):
   """User class"""
   __tablename__ = 'users'
