@@ -36,7 +36,7 @@ Our app aims to improve medication adherence, simplify medication management, an
 - <a href="https://apscheduler.readthedocs.io/" target="_blank">APScheduler</a>: A Python library that allows you to schedule jobs to be executed at specified intervals or times.
 - <a href="https://pypi.org/project/bcrypt/" target="_blank">Bcrypt</a>: A password hashing library for Python that provides secure password storage and verification.
 
-Using the API:
+# Using the API:
 The flask server can be started using the following commands:
 `cd api`
 
