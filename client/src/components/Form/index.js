@@ -72,7 +72,7 @@ const LoginForm = (props) => {
 
   const showToastMessage = () => {
     toast.success(
-      props.formType === "Register" ? "Successfully Register !" : "Successfully Login !",
+      props.formType === "Register" ? "Successfull Register!" : "Successfull Login!",
       {
         position: toast.POSITION.TOP_RIGHT,
       },

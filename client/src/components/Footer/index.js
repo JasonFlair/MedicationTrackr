@@ -1,27 +1,26 @@
-import React from 'react';
+import React from "react";
 import {
-  FooterContainer, 
-  FooterWrap, 
-  FooterLinksContainer, 
-  FooterLinksWrapper, 
-  FooterLinkItems, 
-  FooterLinkTitle, 
-  FooterLink, 
-  SocialMedia, 
-  SocialMediaWrap, 
-  SocialLogo, 
-  WebsiteRights, 
-  SocialIcons, 
-  SocialIconLink, 
-} from './FooterElements'; 
+  FooterContainer,
+  FooterWrap,
+  FooterLinksContainer,
+  FooterLinksWrapper,
+  FooterLinkItems,
+  FooterLinkTitle,
+  FooterLink,
+  SocialMedia,
+  SocialMediaWrap,
+  SocialLogo,
+  WebsiteRights,
+  SocialIcons,
+  SocialIconLink,
+} from "./FooterElements";
 import {
-  FaFacebook, 
-  FaYoutube, 
-  FaTwitter, 
-  FaInstagram, 
-  FaLinkedin, 
-} from 'react-icons/fa';
-
+  FaFacebook,
+  FaYoutube,
+  FaTwitter,
+  FaInstagram,
+  FaLinkedin,
+} from "react-icons/fa";
 
 const Footer = () => {
   return (
@@ -64,10 +63,10 @@ const Footer = () => {
         </FooterLinksContainer>
         <SocialMedia>
           <SocialMediaWrap>
-            <SocialLogo to="/">
-              dolla 
-            </SocialLogo>
-            <WebsiteRights>dolla © {new Date().getFullYear()} All rights reserved.</WebsiteRights>
+            <SocialLogo to="/">MedicationTrackr</SocialLogo>
+            <WebsiteRights>
+              dolla © {new Date().getFullYear()} All rights reserved.
+            </WebsiteRights>
             <SocialIcons>
               <SocialIconLink href="/" target="_blank" aria-label="Facebook">
                 <FaFacebook />

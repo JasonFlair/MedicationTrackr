@@ -104,7 +104,7 @@ const Navbar = ({ toggle, isAuthenticated }) => {
                 <UtilsLinks to="/register">Sign Up</UtilsLinks>
               )}
               {isAuthenticated && (
-                <UtilsLinks to="/dose">Medical Dose</UtilsLinks>
+                <UtilsLinks to="/dose">My Medicines</UtilsLinks>
               )}
             </NavMenu>
             <NavBtn>

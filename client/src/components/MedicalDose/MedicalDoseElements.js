@@ -107,7 +107,7 @@ export const SRedirect = styled.div`
 `;
 
 export const TableWrapper = styled.div`
-  width: 92%;
+  width: 97%;
 `;
 
 export const Table = styled.table`

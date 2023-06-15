@@ -183,14 +183,14 @@ const MedicalDose = ({ isAuthenticated }) => {
           onClick={handleOnClick}
           clickItem={dose}
         >
-          Dose Details
+          Medicine Details
         </StyledMenuItem>
         <StyledMenuItem
           data-id="dose-2"
           onClick={(e) => handleOnClick(e)}
           clickItem={addDose}
         >
-          Add Dose
+          Add Medicine
         </StyledMenuItem>
       </SidebarWrapper>
       {addDose && (
@@ -222,7 +222,7 @@ const MedicalDose = ({ isAuthenticated }) => {
                   <Th>Number of Days</Th>
                   <Th>Days Left</Th>
                   <Th>Days Taken</Th>
-                  <Th>Complete Dose</Th>
+                  <Th>Completed For Today </Th>
                   <Th>Actions</Th>
                 </tr>
               </Thead>
