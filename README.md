@@ -15,7 +15,6 @@ Our app aims to improve medication adherence, simplify medication management, an
 - React
 - Flask
 - Flask-Cors
-- Flask-HTTPAuth
 - Flask-Login
 - Flask-SQLAlchemy
 - Flask-WTF
@@ -29,7 +28,6 @@ Our app aims to improve medication adherence, simplify medication management, an
 - <a href="https://reactjs.org/" target="_blank">React</a>: React is a JavaScript library for building user interfaces. It provides a component-based architecture and efficiently renders and updates UI components, resulting in fast and interactive web applications. 
 - <a href="https://flask.palletsprojects.com/" target="_blank">Flask</a>: A micro web framework for Python that provides a solid foundation for building web applications.
 - <a href="https://flask-cors.readthedocs.io/" target="_blank">Flask-Cors</a>: An extension for Flask that simplifies Cross-Origin Resource Sharing (CORS) configuration.
-- <a href="https://flask-httpauth.readthedocs.io/" target="_blank">Flask-HTTPAuth</a>: A Flask extension that provides basic and digest HTTP authentication for routes in your application.
 - <a href="https://flask-login.readthedocs.io/" target="_blank">Flask-Login</a>: An extension for Flask that manages user authentication, including session management and remember me functionality.
 - <a href="https://flask-sqlalchemy.palletsprojects.com/" target="_blank">Flask-SQLAlchemy</a>: An extension for Flask that simplifies database integration with SQLAlchemy, allowing you to interact with databases using Python objects.
 - <a href="https://pythonhosted.org/Flask-Mail/" target="_blank">Flask-Mail</a>: An extension for Flask that provides a simple interface to send email messages from your application.
