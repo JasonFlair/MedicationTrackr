@@ -1,7 +1,5 @@
 #!/usr/bin/python3
 """Flask app"""
-from flask import Flask
-from flask_sqlalchemy import SQLAlchemy
 import os
 import sys
 # set parent directory to avoid 

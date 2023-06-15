@@ -1,22 +1,14 @@
 #!/usr/bin/python3
 """api views"""
-from flask import jsonify, render_template, redirect, url_for, request, abort, make_response
-from api import User, Medicine, app, mail, scheduler
-from bcrypt import hashpw, checkpw, gensalt
+from flask import jsonify, request
+from api import app, mail, scheduler
+from api.models.users import User
+from api.models.medicines import Medicine
 from flask_mail import Message
-from flask_login import login_user, login_required, logout_user, current_user
-from sqlalchemy.exc import IntegrityError
+from flask_login import login_required, current_user
 from datetime import datetime
-import re
 
-from flask import Blueprint
-dosetracker_views = Blueprint('dosetracker_views', __name__)
-
-# hashes password
-def _hash_password(password):
-    encoded_password = password.encode('utf-8')
-    hashed_pw = hashpw(encoded_password, gensalt())
-    return hashed_pw
+from api.views import dosetracker_views
 
 # sends email using flask mail
 def send_email(user_id, medicine_id):
@@ -29,89 +21,6 @@ def send_email(user_id, medicine_id):
           print (msg.body)
           mail.send(msg)
 
-# routes that handle authentication
-
-@dosetracker_views.route('/login', methods=['POST'])
-def login():
-    """login endpoint"""
-    data = request.get_json()
-    email = data.get('email')
-    password = data.get('password')
-    user = User.query.filter_by(email=email).first()
-    if not email:
-        return jsonify({"error": "no email sent"})
-    if not password:
-        return jsonify({"error": "no password sent"})
-    print(user)
-    if user:
-        password = password
-        encoded_password = password.encode('utf-8')
-        if checkpw(encoded_password, user.password.encode('utf-8')):
-            login_user(user)
-            return jsonify({"username": f"{user.username}", "email": f"{user.email}", "id": user.id, "session_cookie details": "can be found in the verbose response"})
-        else:
-          error_json = jsonify(error="Unauthorised, wrong password")
-          response = make_response(error_json, 401)
-          abort(response)
-    else:
-      error_json = jsonify(error="Unauthorised, no user found")
-      response = make_response(error_json, 401)
-      abort(response)
-
-@dosetracker_views.route('/register', methods=['POST'])
-def register():
-    try:
-        email_pattern = r'^[\w\.-]+@[\w\.-]+\.\w+$'
-        data = request.get_json()
-        email = data.get('email')
-        password = data.get('password')
-        username = data.get('username')
-        if not email:
-          return jsonify({"error": "no email sent"})
-        if not password:
-          return jsonify({"error": "no password sent"})
-        if not username:
-          return jsonify({"error": "no password sent"})
-        hashed_pw = _hash_password(password)
-        # check if email is a valid email with regex
-        if re.match(email_pattern, email) is not None:  # a match was found, email is valid.
-            new_user = User(email=email,
-                        username=username, 
-                        password=hashed_pw)
-            new_user.save()
-            return jsonify({"username": f"{new_user.username}", "email": f"{new_user.email}", "id": new_user.id})
-    except IntegrityError:
-        return jsonify({"error": "attempting to register already existing user"})
-
-@dosetracker_views.route('/logout', methods=['GET', 'POST'])
-@login_required
-def logout():
-    #logout_user()
-    return f'user logged out {current_user.id}.'
-  
-
-# routes that handle other operations
-
-@dosetracker_views.route('/current_user', methods=['GET', 'POST'],
-                         strict_slashes=False)
-@login_required
-def current_user():
-  this_user_id = current_user.id
-  return jsonify({"user_id": this_user_id})
-
-@dosetracker_views.route('/', methods=['GET', 'POST'],
-                         strict_slashes=False)
-def home():
-  return 'Hello'
-
-@dosetracker_views.route('/dashboard', methods=['GET'],
-                         strict_slashes=False)
-@login_required
-def dashboard():
-    # store user id for operations
-    user_id = current_user.id
-    user_name = current_user.username
-    return render_template('dashboard.html', user_id=user_id, user_name=user_name)
  
 # routes for medicines operations 
 @dosetracker_views.route('/new_medicine', methods=['GET', 'POST'])
@@ -214,3 +123,4 @@ def delete_medicine():
         return jsonify({"status": "medicine deleted successfully"})
     except Exception:
         return jsonify({"error": f"no medicine with medicine_id and user_id found"})
+      
