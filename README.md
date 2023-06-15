@@ -62,23 +62,36 @@ A login request can be made like so:
 `curl -XPOST localhost:5000/login -H "Content-Type: application/json" -d '{"email": "name@email.com", "password": "password"}' -v`
 
 The response will look like this:
+
 * Mark bundle as not supporting multiuse
+
 < HTTP/1.1 200 OK
+
 < Server: Werkzeug/2.2.2 Python/3.8.10
+
 < Date: Thu, 15 Jun 2023 11:46:44 GMT
+
 < Content-Type: application/json
+
 < Content-Length: 143
+
 < Access-Control-Allow-Origin: *
+
 < Vary: Cookie
+
 < Set-Cookie: session=.eJwljjkOwzAMwP6iuYMk27KczwSODrRr0kxF_14D3Qgu5Af2PON6wvY-73jA_nLYoHYm8cZG1ETdpNeZ6V7LZAnKIdR0VCWSEajh6p0aZTs4FAsFyiCWiSgWaEv2odNczS2PmsZZOHOOQyRzkWsJ09UzaxMD1sh9xfm_Ifj-AJkEMAo.ZIr6JA.lTvcczIRFlNmDtRQV7lggT7Tkrw; HttpOnly; Path=/
+
 < Connection: close
-< 
+
+<
+
 {
   "email": "emelieobumse123@gmail.com",
   "id": 1,
   "session_cookie details": "can be found in the verbose response",
   "username": "Jay"
 }
+
 
 For subsequent CRUD requests for medicine endpoints, a login is required, so be sure to pass in the session token gotten from the cookie in the login response.
 
