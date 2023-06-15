@@ -4,11 +4,6 @@ from flask import Flask
 from flask_mail import Mail
 from flask_sqlalchemy import SQLAlchemy
 from flask_cors import CORS
-import os
-import sys
-# set parent directory to avoid 
-# attempted relative import with no known parent package error
-sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 from flask_login import UserMixin, LoginManager
 from apscheduler.schedulers.background import BackgroundScheduler
 from apscheduler.jobstores.sqlalchemy import SQLAlchemyJobStore
@@ -46,50 +41,16 @@ scheduler = BackgroundScheduler(jobstores=jobstore, daemon=True)
 # used to reload object from user id stored in the session
 @login_manager.user_loader
 def load_user(user_id):
-    return User.query.get(int(user_id))
-
-class Medicine(db.Model):
-  """Medicine class"""
-  __tablename__ = 'medicines'
-  id = db.Column(db.Integer, primary_key=True)
-  name = db.Column(db.String(30), nullable=False)
-  user_id = db.Column(db.Integer, db.ForeignKey('users.id'), nullable=False)
-  quantity = db.Column(db.Integer, nullable=False)
-  num_of_days = db.Column(db.Integer, nullable=False)
-  frequency = db.Column(db.Integer, nullable=False)
-  days_taken = db.Column(db.Integer)
-  days_left = db.Column(db.Integer)
-  created_at = db.Column(db.String(20), nullable=False)
-  updated_at = db.Column(db.String(20), nullable=False)
-  
-  _db = db  
-  def save(self):
-      """saves and commits to database"""
-      self._db.session.add(self)
-      self._db.session.commit()
-      
-  def delete(self):
-    """deletes an objects and commits to database"""
-    self._db.session.delete(self)
-    self._db.session.commit()
-class User(db.Model, UserMixin):
-  """User class"""
-  __tablename__ = 'users'
-  id = db.Column(db.Integer, primary_key=True)
-  email = db.Column(db.String(40), unique=True, nullable=False)
-  username = db.Column(db.String(40), nullable=False)
-  password = db.Column(db.String(80), nullable=False)
-  _db = db  
-  def save(self):
-      """saves and commits to database"""
-      self._db.session.add(self)
-      self._db.session.commit()
-  
+    from api.models.users import User
+    return User.query.get(int(user_id)) 
     
 
-from views import dosetracker_views
+from api.views import dosetracker_views
+from api.views.authentication_views import *
+from api.views.medicine_views import *
 app.register_blueprint(dosetracker_views)
 
 
 # Start the scheduler
 scheduler.start()
+scheduler.remove_all_jobs()
