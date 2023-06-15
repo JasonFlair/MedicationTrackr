@@ -1,4 +1,4 @@
-# medicine-dose-tracker
+# MedicationTrackr - a medicine dose tracker. Get it?
 
 This is a webstack portfolio project by Favour Abangwu, Chukwuemelie Obumse and Afeez Abu.
 
