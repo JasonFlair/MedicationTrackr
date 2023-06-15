@@ -6,6 +6,7 @@ from bcrypt import hashpw, checkpw, gensalt
 from flask_mail import Message
 from flask_login import login_user, login_required, logout_user, current_user
 from sqlalchemy.exc import IntegrityError
+from datetime import datetime
 import re
 
 from flask import Blueprint
@@ -125,13 +126,16 @@ def new_medicine():
   frequency = data.get('num_of_days')
   days_taken = 0
   days_left = num_of_days
+  created_at = datetime.now().strftime('%d-%m-%Y')
+  updated_at = datetime.now().strftime('%d-%m-%Y')
   
   
   new_medicine = Medicine(name=medicine_name, user_id=user_id,
                           quantity=quantity_per_dose,
                           num_of_days=num_of_days,
                           frequency=frequency,
-                          days_left= days_left, days_taken=days_taken)
+                          days_left= days_left, days_taken=days_taken,
+                          created_at=created_at, updated_at=updated_at)
   new_medicine.save()
 
   new_medicine_details = {"medicine_name": medicine_name,
@@ -141,7 +145,9 @@ def new_medicine():
                           "frequency": frequency,
                           "days_taken": days_taken,
                           "days_left": days_left,
-                          "medicine_id": new_medicine.id}
+                          "medicine_id": new_medicine.id,
+                          "created_at": new_medicine.created_at,
+                          "updated_at": new_medicine.updated_at}
   # schedule a job to send email reminders every 9 hours
   scheduler.add_job(send_email, 'interval', minutes=2, kwargs={'user_id':user_id, 'medicine_id': new_medicine.id})
   return jsonify(new_medicine_details)
@@ -162,6 +168,8 @@ def get_all_medicines_by_user(id):
       medicine_obj['days_taken'] = medicine.days_taken
       medicine_obj['days_left'] = medicine.days_left
       medicine_obj['id'] = medicine.id
+      medicine_obj['created_at'] = medicine.created_at
+      medicine_obj['updated_at'] = medicine.updated_at
       
       medicines_list.append(medicine_obj)
     return jsonify({f"medicines_for_user_{user_id}": medicines_list})
@@ -186,6 +194,7 @@ def update_medication_status():
         new_days_taken = days_taken + 1
         medicine_to_be_updated.days_left = new_days_left
         medicine_to_be_updated.days_taken = new_days_taken
+        medicine_to_be_updated.updated_at = datetime.now().strftime('%d-%m-%Y')
         Medicine.save(medicine_to_be_updated)
         return jsonify({"days_left": new_days_left, "days_taken": new_days_taken})
     except Exception:

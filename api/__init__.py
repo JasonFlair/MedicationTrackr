@@ -59,6 +59,8 @@ class Medicine(db.Model):
   frequency = db.Column(db.Integer, nullable=False)
   days_taken = db.Column(db.Integer)
   days_left = db.Column(db.Integer)
+  created_at = db.Column(db.String(20), nullable=False)
+  updated_at = db.Column(db.String(20), nullable=False)
   
   _db = db  
   def save(self):
