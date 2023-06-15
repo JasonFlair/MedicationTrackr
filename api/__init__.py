@@ -44,8 +44,9 @@ def load_user(user_id):
     from api.models.users import User
     return User.query.get(int(user_id)) 
     
-
+#import blue print
 from api.views import dosetracker_views
+# import all views
 from api.views.authentication_views import *
 from api.views.medicine_views import *
 app.register_blueprint(dosetracker_views)
