@@ -1,12 +1,12 @@
-# MedicationTrackr - a medicine dose tracker. Get it?
+# MedicationTrackr - a medication tracker. Get it?
 
-This is a webstack portfolio project by Favour Abangwu, Chukwuemelie Obumse and Afeez Abu.
+This is a webstack portfolio project by Chukwuemelie Obumse and Afeez Abu.
 
-Our project is a medicine dose tracker web app designed to help users in managing their medications effectively.
+Our project is a medication tracker web application designed to help users in managing their medications effectively.
 
-It offers a user-friendly interface with key features such as reminders, medication tracking and medication history. 
+It offers a user-friendly interface with key features such as reminders and medication history. 
 
-Our app aims to improve medication adherence, simplify medication management, and ultimately enhance users' health and well-being. With intuitive navigation and personalized email notifications our medicine dose tracker web app provides a seamless and efficient solution for users to stay on top of their medication regimen.
+Our app aims to improve medication adherence, simplify medication management, and ultimately enhance users' health and well-being. With intuitive navigation and personalized email notifications our medication tracker web application provides a seamless and efficient solution for users to stay on top of their medication regimen.
 
 # Prerequisites
 
