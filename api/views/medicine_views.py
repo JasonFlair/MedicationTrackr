@@ -58,7 +58,7 @@ def new_medicine():
                           "created_at": new_medicine.created_at,
                           "updated_at": new_medicine.updated_at}
   # schedule a job to send email reminders every 9 hours
-  scheduler.add_job(send_email, 'interval', minutes=2, kwargs={'user_id':user_id, 'medicine_id': new_medicine.id})
+  scheduler.add_job(send_email, 'interval', hours=9, kwargs={'user_id':user_id, 'medicine_id': new_medicine.id})
   return jsonify(new_medicine_details)
 
 @dosetracker_views.route('/all_medicines_by_user/<id>', methods=['GET', 'POST'], strict_slashes=False)
